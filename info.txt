@@ -1,0 +1,12 @@
+Running the client -> npm run dev
+Running the server -> npm run server
+
+https://plaid.com/docs/quickstart/ gives the quickstart guide of implementing api
+
+react plaid link,
+used npm plaid  to set up configuration for plaid
+
+Steps
+
+1.Call /link/token/create to create a link_token and pass the temporary token to your app's client.
+2.Use the link_token to open Link for your user. In the onSuccess callback, Link will provide a temporary public_token.
