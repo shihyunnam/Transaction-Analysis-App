@@ -7,8 +7,9 @@ const bodyParser = require("body-parser");
 //configuring the plaid api
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
 
+// Configuring the Plaid API//구성
 const configuration = new Configuration({
-  basePath: PlaidEnvironments.sandbox,
+  basePath: PlaidEnvironments.sandbox,// Setting the Plaid API environment to sandbox -> fake money
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': '6499146a548cc90015c7ea0b',
@@ -17,24 +18,22 @@ const configuration = new Configuration({
   },
 });
 
-const plaidClient = new PlaidApi(configuration);
+const plaidClient = new PlaidApi(configuration);// Creating a Plaid client using the provided configuration
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 
-app.post("/hello", (request, response) => {
-    response.json({message:"hello " + request.body.name});
-})
-//if we connect to localhost/ 8000 /hello -> we get the response from the endpoint we just created
-// app.get("/hello", (request,response)=> {
-//     response.json({message:"hello world!"});
-// })
 
+//The first step is to create a new link_token by making a /link/token/create request and passing in the required 
+// configurations. This link_token is a short lived, one-time use token that authenticates your app with Plaid Link, 
+// our frontend module. Several of the environment variables you configured when launching the Quickstart, 
+// such as PLAID_PRODUCTS, are used as parameters for the link_token.
 app.post('/create_link_token', async function (request, response) {
-  
+
     const clientUserId = 'user';
+    //plaid Request
     const plaidRequest = {
       user: {
         // This should correspond to a unique id for the current user.
@@ -47,6 +46,7 @@ app.post('/create_link_token', async function (request, response) {
       country_codes: ['US'],
     };
     try {
+      //Once you have a link_token, you can use it to initialize Link.
       const createTokenResponse = await plaidClient.linkTokenCreate(plaidRequest);
       response.json(createTokenResponse.data);
     } catch (error) {
@@ -55,6 +55,44 @@ app.post('/create_link_token', async function (request, response) {
     }
   });
 
+//for accesstoken
+app.post("/auth", async function(request, response) {
+  try {
+    const access_token = request.body.access_token;//recieving from react
+    const plaidRequest = {
+      access_token : access_token,
+    };
+    const plaidResponse = await plaidClient.authGet(plaidRequest);
+    response.json(plaidResponse.data);
+
+  } catch {
+    response.status(500).send("failed");
+  }
+});
+//exchanging to public token
+  app.post('/exchange_public_token', async function (
+    request,
+    response,
+    next,
+  ) {
+    const publicToken = request.body.public_token;
+    try {
+      const plaidResponse = await plaidClient.itemPublicTokenExchange({
+        public_token: publicToken,
+      });
+  
+      // These values should be saved to a persistent database and
+      // associated with the currently signed-in user
+      const accessToken = plaidResponse.data.access_token;
+      //const itemID = response.data.item_id;
+  
+      response.json({ accessToken });
+    } catch (error) {
+      // handle error
+      response.status(500).send("failed");
+
+    }
+  });
 app.listen(8000, () =>{
     console.log("server started");
 })
