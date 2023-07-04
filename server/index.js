@@ -1,24 +1,25 @@
 //ajax -> asynchronously sends and retrievs data,
 //body-parser -> parsing the json file
-const express = require("express");//import express module usually for http requests
-const cors = require("cors");
-const bodyParser = require("body-parser");
+const express = require("express");//handles HTTP requests and define routes
+const cors = require("cors");//security when requesting resource shared
+const bodyParser = require("body-parser");//for json parsing
 
 //configuring the plaid api
-const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');//from plaid package, importing modules
 
 // Configuring the Plaid API//구성
 const configuration = new Configuration({
   basePath: PlaidEnvironments.sandbox,// Setting the Plaid API environment to sandbox -> fake money
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': '6499146a548cc90015c7ea0b',
-      'PLAID-SECRET': '57fbe9d407d73e8eb581ad42e9f5fb',
+      //should put personal data
+      'PLAID-CLIENT-ID': '',
+      'PLAID-SECRET': '',
     },
   },
 });
 
-const plaidClient = new PlaidApi(configuration);// Creating a Plaid client using the provided configuration
+const plaidClient = new PlaidApi(configuration);// Creating a Plaid client using the provided configuration, making new instance
 
 const app = express();
 app.use(cors());
@@ -70,7 +71,7 @@ app.post("/auth", async function(request, response) {
   }
 });
 //exchanging to public token
-  app.post('/exchange_public_token', async function (
+app.post('/exchange_public_token', async function (
     request,
     response,
     next,
@@ -92,7 +93,10 @@ app.post("/auth", async function(request, response) {
       response.status(500).send("failed");
 
     }
-  });
+});
+
+
 app.listen(8000, () =>{
     console.log("server started");
 })
+
